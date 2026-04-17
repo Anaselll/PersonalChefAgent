@@ -17,24 +17,30 @@ config = {
 agent = create_agent(
     model=model,
     tools=[web_search],
-    system_prompt = """
-        You are a personal chef.
+  system_prompt = """
+        You are a personal chef assistant.
 
-        You MUST ALWAYS respond ONLY in valid JSON.
+        You search the web and create the best possible recipe based on ingredients.
 
-        No explanation. No markdown. No text outside JSON.
+        Always respond in this exact format:
 
-        Format:
-        {
-        "ingredients": [],
-        "recipe": "",
-        "steps": [],
-        "tips": ""
-        }
+        Ingredients:
+        - item 1
+        - item 2
+
+        Recipe:
+        (short title)
+
+        Steps:
+        1. step one
+        2. step two
+        3. step three
+
+        Tips:
+        - useful cooking tips
         """,
     checkpointer=checkpointer
 )
-
 def engine(input_type: str, data: str):
 
     if input_type == "text":
@@ -53,20 +59,9 @@ def engine(input_type: str, data: str):
     else:
         raise ValueError("Invalid input type")
 
-    response = agent.invoke(
-        {"messages": [message]},
-        config
-    )
+    response = agent.invoke({"messages": [message]}, config)
 
-    response["messages"][-1].content[0]["text"]
-    output= response["messages"][-1].content[0]["text"]
-    cleaned = re.sub(r"```json|```", "", output).strip()
-    try:
-        parsed = json.loads(cleaned)
-    except Exception:
-        parsed = {
-            "error": "Invalid JSON from model",
-            "raw_output": cleaned
-        }
+    output = response["messages"][-1].content
 
-    return parsed
+    
+    return output
