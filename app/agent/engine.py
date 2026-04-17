@@ -1,32 +1,72 @@
+from langchain_core.messages import HumanMessage
+import re
+from app.model.gemini import model
 from langchain.agents import create_agent
-
-
 from app.tools.web_search import web_search
-from langchain.messages import HumanMessage
-from app.model.groq import model
 from langgraph.checkpoint.memory import InMemorySaver
+import json
+checkpointer = InMemorySaver()
+config = {
+        "configurable": {
+            "thread_id": "1"
+        }
+    }
 
 
 
-agent=create_agent(
+agent = create_agent(
     model=model,
     tools=[web_search],
-    system_prompt="you are a personal chef that cook the best food based on ingredients",
-    checkpointer=InMemorySaver()
+    system_prompt = """
+        You are a personal chef.
+
+        You MUST ALWAYS respond ONLY in valid JSON.
+
+        No explanation. No markdown. No text outside JSON.
+
+        Format:
+        {
+        "ingredients": [],
+        "recipe": "",
+        "steps": [],
+        "tips": ""
+        }
+        """,
+    checkpointer=checkpointer
 )
 
-config={"configurable":{"thread_id":"1"}}
+def engine(input_type: str, data: str):
 
-response=agent.invoke({
-    "messages":[HumanMessage(content="i have tomato pasta and chicken")],
-  
-},  config)
+    if input_type == "text":
+        message = HumanMessage(content=data)
 
-response=agent.invoke({
-    "messages":[HumanMessage(content="detail this recipe")],
-  
-},  config)
+    elif input_type == "image":
+        message = HumanMessage(content=[
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/png;base64,{data}"
+                }
+            }
+        ])
 
+    else:
+        raise ValueError("Invalid input type")
 
+    response = agent.invoke(
+        {"messages": [message]},
+        config
+    )
 
-print(response["messages"])
+    response["messages"][-1].content[0]["text"]
+    output= response["messages"][-1].content[0]["text"]
+    cleaned = re.sub(r"```json|```", "", output).strip()
+    try:
+        parsed = json.loads(cleaned)
+    except Exception:
+        parsed = {
+            "error": "Invalid JSON from model",
+            "raw_output": cleaned
+        }
+
+    return parsed

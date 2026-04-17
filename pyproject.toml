@@ -6,9 +6,12 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "dotenv>=0.9.9",
-    "langchain>=1.2.15",
+    "langchain[google-genai]>=1.2.15",
     "langchain-groq>=1.1.2",
     "python-dotenv>=1.2.2",
     "tavily>=1.1.0",
     "tavily-python>=0.7.23",
+    "fastapi>=0.136.0",
+    "uvicorn>=0.44.0",
+    "python-multipart>=0.0.26",
 ]
