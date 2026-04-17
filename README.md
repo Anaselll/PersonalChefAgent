@@ -68,21 +68,13 @@ uvicorn app.api.app:app --reload
 | `POST` | `/chat/image-upload` | Upload an image of ingredients |
 
 ### Example — text
+![alt text](image-1.png)
 
-```bash
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"data": "chicken, garlic, lemon, rosemary"}'
-```
 
 ### Example — image
 
-```bash
-curl -X POST http://localhost:8000/chat/image-upload \
-  -F "file=@ingredients.jpg"
-```
-
----
+![alt text](ingredients.webp)
+![alt text](image.png)
 
 ## Response Format
 
